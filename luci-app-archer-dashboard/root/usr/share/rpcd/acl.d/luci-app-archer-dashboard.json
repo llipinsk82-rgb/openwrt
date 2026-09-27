@@ -1,6 +1,22 @@
 {
   "luci-app-archer-dashboard": {
     "description": "Grant read-only access to the Archer C7 dashboard",
-    "read": {"ubus":{"system":["board","info"],"luci":["getMountPoints"],"luci-rpc":["getDHCPLeases"],"iwinfo":["assoclist"]}}
+    "read": {
+      "ubus": {
+        "system": [
+          "board",
+          "info"
+        ],
+        "luci": [
+          "getMountPoints"
+        ],
+        "luci-rpc": [
+          "getDHCPLeases"
+        ],
+        "iwinfo": [
+          "assoclist"
+        ]
+      }
+    }
   }
 }
