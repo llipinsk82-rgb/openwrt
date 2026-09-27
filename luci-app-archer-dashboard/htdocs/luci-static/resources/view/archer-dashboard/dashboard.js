@@ -2,6 +2,9 @@
 'require view';
 'require archer-dashboard.data as dashboardData';
 
+if (!document.querySelector('link[data-archer-dashboard-css]'))
+	document.head.appendChild(E('link', { rel: 'stylesheet', href: L.resource('archer-dashboard/dashboard.css'), 'data-archer-dashboard-css': '1' }));
+
 const REFRESH_MS = 10000;
 
 function pill(text, kind) { return E('span', { class: `archer-pill ${kind || ''}` }, [String(text).toUpperCase()]); }
@@ -16,7 +19,6 @@ function card(id, icon, title, subtitle, state, stateKind, rows, href, linkLabel
 
 return view.extend({
 	load() { return dashboardData.loadSnapshot(); },
-
 	renderCards(s) {
 		return E('div', { class: 'archer-dashboard-grid' }, [
 			card('internet', '◉', _('Internet'), s.internet.status === 'online' ? _('Connected') : _('Disconnected'), s.internet.status, s.internet.status === 'online' ? 'good' : 'muted', [row('IPv4 (WAN)', s.internet.ipv4), row('IPv6 (WAN)', s.internet.ipv6), row(_('Gateway'), s.internet.gateway), row(_('Interface'), s.internet.interface), row(_('Protocol'), s.internet.protocol), row(_('Uptime'), s.internet.uptime)], L.url('admin/network/network'), _('Internet Settings')),
@@ -27,25 +29,16 @@ return view.extend({
 			card('system', '⚙', _('System'), s.system.firmware, 'healthy', 'good', [row(_('Model'), s.system.model), row(_('Architecture'), s.system.architecture), row(_('CPU load (1 / 5 / 15)'), s.system.load), row(_('Memory'), s.system.memory), row(_('Temperature'), s.system.temperature), row(_('Uptime'), s.system.uptime)], L.url('admin/system/system'), _('System Settings'))
 		]);
 	},
-
 	renderShell(snapshot) {
-		return E('div', { class: 'archer-dashboard' }, [
-			E('section', { class: 'archer-dashboard-hero' }, [E('div', {}, [E('h1', {}, [_('Dashboard')]), E('p', {}, [_('Overview of your router, network and system status')])]), E('div', { class: 'archer-dashboard-uptime' }, [_('Uptime'), ' ', E('b', {}, [snapshot.system.uptime])])]),
-			this.renderCards(snapshot)
-		]);
+		return E('div', { class: 'archer-dashboard' }, [E('section', { class: 'archer-dashboard-hero' }, [E('div', {}, [E('h1', {}, [_('Dashboard')]), E('p', {}, [_('Overview of your router, network and system status')])]), E('div', { class: 'archer-dashboard-uptime' }, [_('Uptime'), ' ', E('b', {}, [snapshot.system.uptime])])]), this.renderCards(snapshot)]);
 	},
-
 	render(snapshot) {
 		const shell = this.renderShell(snapshot);
 		if (this._timer) window.clearInterval(this._timer);
-		this._timer = window.setInterval(() => dashboardData.loadSnapshot().then((next) => {
-			const fresh = this.renderShell(next);
-			shell.replaceChildren(...fresh.childNodes);
-		}).catch(() => {}), REFRESH_MS);
+		this._timer = window.setInterval(() => dashboardData.loadSnapshot().then((next) => { const fresh = this.renderShell(next); shell.replaceChildren(...fresh.childNodes); }).catch(() => {}), REFRESH_MS);
 		window.addEventListener('beforeunload', () => { if (this._timer) window.clearInterval(this._timer); }, { once: true });
 		return shell;
 	},
-
 	handleSaveApply: null,
 	handleSave: null,
 	handleReset: null
