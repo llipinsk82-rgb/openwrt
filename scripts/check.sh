@@ -10,3 +10,7 @@ if command -v node >/dev/null 2>&1; then
     find luci-theme-archer luci-app-archer-dashboard -type f -name '*.js' -print0 2>/dev/null |
         xargs -0 -r -n1 node --check
 fi
+
+if command -v node >/dev/null 2>&1; then
+    node tests/js/test_normalize.js
+fi
