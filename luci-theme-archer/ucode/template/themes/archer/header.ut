@@ -1,0 +1,59 @@
+{# SPDX-License-Identifier: Apache-2.0 #}
+{%
+	import { getuid, getspnam } from 'luci.core';
+	const boardinfo = ubus.call('system', 'board');
+	http.prepare_content('text/html; charset=UTF-8');
+-%}
+<!DOCTYPE html>
+<html lang="{{ dispatcher.lang }}">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="darkreader-lock">
+	<title>{{ striptags(`OpenWrt • Archer C7${dispatched?.title ? ` | ${_(dispatched.title)}` : ''}`) }}</title>
+	<link rel="stylesheet" href="{{ media }}/cascade.css">
+	<link rel="stylesheet" media="only screen and (max-device-width: 854px)" href="{{ media }}/mobile.css">
+	<link rel="icon" href="{{ media }}/logo_48.png" sizes="48x48">
+	<link rel="icon" href="{{ media }}/logo.svg" sizes="any">
+	{% if (node?.css): %}<link rel="stylesheet" href="{{ resource }}/{{ node.css }}">{% endif %}
+	{% if (css): %}<style title="text/css">{{ css }}</style>{% endif %}
+	<script src="{{ dispatcher.build_url('admin/translations', dispatcher.lang) }}"></script>
+	<script src="{{ resource }}/cbi.js"></script>
+</head>
+<body class="archer-theme lang_{{ dispatcher.lang }} {{ entityencode(striptags(node?.title ?? ''), true) }}" data-page="{{ entityencode(join('-', ctx.request_path), true) }}">
+{% if (!blank_page): %}
+<div class="archer-app">
+	<header class="archer-topbar">
+		<a class="archer-brand" href="{{ dispatcher.build_url('admin/archer/dashboard') }}">
+			<img src="{{ media }}/logo.svg" alt="">
+			<span class="archer-brand-copy"><strong>OpenWrt <em>•</em> Archer C7</strong><small>{{ boardinfo.release?.description ?? 'OpenWrt' }} • {{ boardinfo.model ?? 'TP-Link Archer C7 v5' }}</small></span>
+		</a>
+		<div class="archer-top-actions">
+			<button type="button" id="archer-mode-toggle" class="archer-mode-toggle" data-simple="SIMPLE" data-advanced="ADVANCED" aria-label="Switch interface mode"><span>SIMPLE</span><i aria-hidden="true"></i><b>ADVANCED</b></button>
+		</div>
+	</header>
+	<aside class="archer-simple-shell archer-sidebar" aria-label="Simple navigation">
+		<a class="archer-nav-item archer-nav-dashboard" href="{{ dispatcher.build_url('admin/archer/dashboard') }}"><span>▦</span>{{ _('Dashboard') }}</a>
+		<a class="archer-nav-item" href="{{ dispatcher.build_url('admin/network/network') }}"><span>◉</span>{{ _('Internet') }}</a>
+		<a class="archer-nav-item" href="{{ dispatcher.build_url('admin/network/wireless') }}"><span>⌁</span>{{ _('Wi-Fi') }}</a>
+		<a class="archer-nav-item" href="{{ dispatcher.build_url('admin/archer/dashboard') }}#vpn"><span>⬡</span>{{ _('VPN') }}</a>
+		<a class="archer-nav-item" href="{{ dispatcher.build_url('admin/archer/dashboard') }}#devices"><span>▣</span>{{ _('Devices') }}</a>
+		<a class="archer-nav-item" href="{{ dispatcher.build_url('admin/archer/dashboard') }}#storage"><span>▭</span>{{ _('Storage') }}</a>
+		<a class="archer-nav-item" href="{{ dispatcher.build_url('admin/system/system') }}"><span>⚙</span>{{ _('System') }}</a>
+		<div class="archer-nav-separator"></div>
+		<button type="button" class="archer-nav-item archer-nav-button" data-archer-action="advanced"><span>↗</span>{{ _('Advanced LuCI') }}</button>
+		<a class="archer-nav-item" href="{{ dispatcher.build_url('admin/logout') }}"><span>⇥</span>{{ _('Log out') }}</a>
+	</aside>
+	<main id="maincontent" class="archer-content container">
+		<div class="archer-advanced-shell">
+			<ul class="nav" id="topmenu"></ul>
+			<div id="tabmenu"></div>
+		</div>
+		{% if (getuid() == 0 && getspnam('root')?.pwdp === ''): %}
+		<div class="alert-message warning"><h4>{{ _('No password set!') }}</h4><p>{{ _('There is no password set on this router. Please configure a root password to protect the web interface.') }}</p></div>
+		{% endif %}
+		{% if (boardinfo.rootfs_type == 'initramfs'): %}
+		<div class="alert-message warning"><h4>{{ _('System running in recovery (initramfs) mode.') }}</h4></div>
+		{% endif %}
+		<noscript><div class="alert-message warning"><h4>{{ _('JavaScript required!') }}</h4><p>{{ _('You must enable JavaScript in your browser or LuCI will not work properly.') }}</p></div></noscript>
+{% endif %}
